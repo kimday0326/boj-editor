@@ -1,7 +1,16 @@
 #boj-editor-btn {
-  transition: background 0.15s, color 0.15s;
+  border-color: #9cb4ff;
+  background: linear-gradient(180deg, #f9fbff 0%, #eef3ff 100%);
+  box-shadow: 0 1px 0 rgba(0, 0, 0, 0.06);
+  transition:
+    background 0.15s,
+    color 0.15s,
+    border-color 0.15s,
+    box-shadow 0.15s;
 }
 
 #boj-editor-btn:hover {
-  background: #e8e8e8;
+  background: linear-gradient(180deg, #f2f7ff 0%, #e3ebff 100%);
+  border-color: #7997ff;
+  box-shadow: 0 2px 6px rgba(80, 109, 200, 0.18);
 }
