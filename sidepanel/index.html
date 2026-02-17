@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>BOJ Editor</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;600;700&family=Source+Code+Pro:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="sidepanel.css">
+</head>
+<body>
+  <div id="toolbar">
+    <div class="toolbar-left">
+      <span id="problem-info"></span>
+      <select id="language-select"></select>
+    </div>
+    <div class="toolbar-right">
+      <label class="toggle-label">
+        <input type="checkbox" id="autocomplete-toggle" checked>
+        <span>Auto</span>
+      </label>
+      <div class="font-size-stepper">
+        <button id="font-decrease" class="stepper-btn" title="Decrease font size" aria-label="Decrease font size">
+          <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M2.5 6h7" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+        </button>
+        <span id="font-size-display" title="Font size">16</span>
+        <button id="font-increase" class="stepper-btn" title="Increase font size" aria-label="Increase font size">
+          <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M6 2.5v7M2.5 6h7" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+        </button>
+      </div>
+      <button id="btn-run" class="btn-run" title="Ctrl/Cmd+Enter">Run</button>
+      <button id="btn-submit" class="btn-submit">Submit</button>
+      <button id="btn-theme-toggle" class="btn-icon" title="Toggle theme">&#127769;</button>
+      <button id="btn-settings" class="btn-icon" title="Settings">&#9881;</button>
+    </div>
+  </div>
+
+  <div id="editor-container"></div>
+
+  <div id="resize-handle"></div>
+
+  <div id="bottom-panel">
+    <div id="bottom-tabs">
+      <button class="tab-btn active" data-tab="testcases">Test Cases</button>
+      <button class="tab-btn" data-tab="results">Results</button>
+    </div>
+    <div id="tab-content-testcases" class="tab-content active"></div>
+    <div id="tab-content-results" class="tab-content"></div>
+  </div>
+
+  <div id="settings-modal" class="modal hidden">
+    <div class="modal-content">
+      <div class="modal-header">
+        <span>Settings</span>
+        <button id="settings-close" class="btn-icon">&times;</button>
+      </div>
+      <div class="modal-body">
+        <label>Piston API Key
+          <input type="text" id="setting-api-key" placeholder="Enter API key">
+        </label>
+        <label>Default Language
+          <select id="setting-default-lang"></select>
+        </label>
+        <label>Run Timeout (ms)
+          <input type="number" id="setting-timeout" value="5000" min="1000" max="30000" step="1000">
+        </label>
+      </div>
+      <div class="modal-footer">
+        <button id="settings-save" class="btn-run">Save</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="../lib/monaco/vs/loader.js"></script>
+  <script src="utils/languages.js"></script>
+  <script src="utils/storage.js"></script>
+  <script src="utils/piston.js"></script>
+  <script src="utils/baekjoon.js"></script>
+  <script src="components/editor.js"></script>
+  <script src="components/toolbar.js"></script>
+  <script src="components/testcases.js"></script>
+  <script src="components/results.js"></script>
+  <script src="components/resizer.js"></script>
+  <script src="sidepanel.js"></script>
+</body>
+</html>

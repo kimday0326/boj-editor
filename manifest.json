@@ -1,0 +1,57 @@
+{
+  "manifest_version": 3,
+  "name": "BOJ Editor",
+  "version": "1.0.0",
+  "description": "Integrated code editor for Baekjoon Online Judge with test case execution and submission",
+  "minimum_chrome_version": "116",
+
+  "permissions": [
+    "sidePanel",
+    "storage",
+    "tabs",
+    "activeTab",
+    "cookies",
+    "scripting"
+  ],
+
+  "host_permissions": [
+    "https://www.acmicpc.net/*",
+    "https://emkc.org/*"
+  ],
+
+  "background": {
+    "service_worker": "background.js"
+  },
+
+  "side_panel": {
+    "default_path": "sidepanel/index.html"
+  },
+
+  "content_scripts": [
+    {
+      "matches": [
+        "https://www.acmicpc.net/problem/*"
+      ],
+      "js": ["content/content.js"],
+      "css": ["content/content.css"],
+      "run_at": "document_end"
+    }
+  ],
+
+  "web_accessible_resources": [
+    {
+      "resources": ["lib/monaco/**/*"],
+      "matches": ["<all_urls>"]
+    }
+  ],
+
+  "content_security_policy": {
+    "extension_pages": "script-src 'self'; object-src 'self';"
+  },
+
+  "icons": {
+    "16": "assets/icons/icon16.png",
+    "48": "assets/icons/icon48.png",
+    "128": "assets/icons/icon128.png"
+  }
+}

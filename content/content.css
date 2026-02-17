@@ -1,0 +1,7 @@
+#boj-editor-btn {
+  transition: background 0.15s, color 0.15s;
+}
+
+#boj-editor-btn:hover {
+  background: #e8e8e8;
+}

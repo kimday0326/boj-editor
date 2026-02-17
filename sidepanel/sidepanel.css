@@ -1,0 +1,746 @@
+/* ===================================================================
+   BOJ Editor — Design System
+   Inspired by Baekjoon Online Judge (acmicpc.net)
+   Fonts: Noto Sans KR, Source Code Pro
+   =================================================================== */
+
+/* --- Light Theme (Default, BOJ-matching) --- */
+:root,
+[data-theme="light"] {
+  --bg-primary: #ffffff;
+  --bg-secondary: #f8f9fa;
+  --bg-tertiary: #f1f3f5;
+  --bg-input: #ffffff;
+  --bg-hover: #e9ecef;
+  --text-primary: #333333;
+  --text-secondary: #666666;
+  --text-tertiary: #999999;
+  --text-heading: #222222;
+  --border-primary: #e5e5e5;
+  --border-secondary: #d5d5d5;
+  --accent-blue: #0076c0;
+  --accent-blue-hover: #005fa3;
+  --accent-blue-subtle: rgba(0, 118, 192, 0.08);
+  --accent-green: #2ea043;
+  --accent-green-hover: #279a3b;
+  --accent-green-subtle: rgba(46, 160, 67, 0.08);
+  --accent-red: #d32f2f;
+  --accent-green-text: #1a7f37;
+  --scrollbar-track: #f1f3f5;
+  --scrollbar-thumb: #c1c1c1;
+  --scrollbar-thumb-hover: #a0a0a0;
+  --spinner-border: #d5d5d5;
+  --modal-overlay: rgba(0, 0, 0, 0.35);
+  --result-pass-bg: rgba(46, 160, 67, 0.08);
+  --result-fail-bg: rgba(211, 47, 47, 0.06);
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.06);
+  --shadow-md: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+/* --- Dark Theme --- */
+[data-theme="dark"] {
+  --bg-primary: #1b1d21;
+  --bg-secondary: #22252a;
+  --bg-tertiary: #2a2d33;
+  --bg-input: #2a2d33;
+  --bg-hover: #33363d;
+  --text-primary: #d6d8db;
+  --text-secondary: #9a9da2;
+  --text-tertiary: #6e7279;
+  --text-heading: #e1e3e6;
+  --border-primary: #33363d;
+  --border-secondary: #3d4048;
+  --accent-blue: #4da6e0;
+  --accent-blue-hover: #3b96d4;
+  --accent-blue-subtle: rgba(77, 166, 224, 0.1);
+  --accent-green: #3fb950;
+  --accent-green-hover: #34a045;
+  --accent-green-subtle: rgba(63, 185, 80, 0.1);
+  --accent-red: #f47068;
+  --accent-green-text: #56d364;
+  --scrollbar-track: #1b1d21;
+  --scrollbar-thumb: #3d4048;
+  --scrollbar-thumb-hover: #4d5058;
+  --spinner-border: #3d4048;
+  --modal-overlay: rgba(0, 0, 0, 0.6);
+  --result-pass-bg: rgba(63, 185, 80, 0.1);
+  --result-fail-bg: rgba(244, 112, 104, 0.08);
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.2);
+  --shadow-md: 0 2px 8px rgba(0, 0, 0, 0.3);
+}
+
+
+/* ===================================================================
+   Base
+   =================================================================== */
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  background: var(--bg-primary);
+  color: var(--text-primary);
+  font-family: 'Noto Sans KR', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  font-size: 13px;
+  font-weight: 400;
+  overflow: hidden;
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+
+/* ===================================================================
+   Toolbar
+   =================================================================== */
+
+#toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: var(--bg-secondary);
+  border-bottom: 1px solid var(--border-primary);
+  padding: 6px 10px;
+  flex-shrink: 0;
+  gap: 6px;
+  min-height: 42px;
+}
+
+.toolbar-left,
+.toolbar-right {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.toolbar-left {
+  flex: 1;
+  min-width: 0;
+}
+
+#problem-info {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--text-secondary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 160px;
+}
+
+
+/* ===================================================================
+   Form Controls
+   =================================================================== */
+
+select,
+input[type="text"],
+input[type="number"] {
+  background: var(--bg-input);
+  color: var(--text-primary);
+  border: 1px solid var(--border-secondary);
+  border-radius: 4px;
+  padding: 4px 8px;
+  font-family: 'Noto Sans KR', sans-serif;
+  font-size: 12px;
+  outline: none;
+  transition: border-color 0.15s;
+}
+
+select:focus,
+input:focus {
+  border-color: var(--accent-blue);
+  box-shadow: 0 0 0 2px var(--accent-blue-subtle);
+}
+
+#language-select {
+  min-width: 110px;
+}
+
+
+/* ===================================================================
+   Buttons
+   =================================================================== */
+
+.btn-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  border: 1px solid var(--border-secondary);
+  color: var(--text-secondary);
+  border-radius: 4px;
+  padding: 4px 8px;
+  cursor: pointer;
+  font-size: 13px;
+  line-height: 1;
+  transition: background 0.15s, color 0.15s, border-color 0.15s;
+}
+
+.btn-icon:hover {
+  background: var(--bg-hover);
+  color: var(--text-primary);
+}
+
+.btn-run {
+  background: var(--accent-blue);
+  color: #ffffff;
+  border: none;
+  border-radius: 4px;
+  padding: 5px 14px;
+  cursor: pointer;
+  font-family: 'Noto Sans KR', sans-serif;
+  font-size: 12px;
+  font-weight: 600;
+  transition: background 0.15s;
+}
+
+.btn-run:hover {
+  background: var(--accent-blue-hover);
+}
+
+.btn-run:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.btn-submit {
+  background: var(--accent-green);
+  color: #ffffff;
+  border: none;
+  border-radius: 4px;
+  padding: 5px 14px;
+  cursor: pointer;
+  font-family: 'Noto Sans KR', sans-serif;
+  font-size: 12px;
+  font-weight: 600;
+  transition: background 0.15s;
+}
+
+.btn-submit:hover {
+  background: var(--accent-green-hover);
+}
+
+.btn-submit:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+
+/* ===================================================================
+   Toggle & Font Stepper
+   =================================================================== */
+
+.toggle-label {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 11px;
+  color: var(--text-tertiary);
+  cursor: pointer;
+  user-select: none;
+}
+
+.toggle-label input[type="checkbox"] {
+  accent-color: var(--accent-blue);
+  width: 13px;
+  height: 13px;
+}
+
+.font-size-stepper {
+  display: inline-flex;
+  align-items: center;
+  background: var(--bg-input);
+  border: 1px solid var(--border-secondary);
+  border-radius: 4px;
+  overflow: hidden;
+  height: 26px;
+}
+
+.font-size-stepper .stepper-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: none;
+  border: none;
+  color: var(--text-secondary);
+  cursor: pointer;
+  width: 24px;
+  height: 100%;
+  padding: 0;
+  transition: background 0.15s, color 0.15s;
+}
+
+.font-size-stepper .stepper-btn:hover {
+  background: var(--bg-hover);
+  color: var(--text-primary);
+}
+
+.font-size-stepper .stepper-btn:active {
+  background: var(--border-primary);
+}
+
+.font-size-stepper #font-size-display {
+  font-family: 'Source Code Pro', monospace;
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--text-primary);
+  min-width: 24px;
+  text-align: center;
+  padding: 0 1px;
+  user-select: none;
+  border-left: 1px solid var(--border-secondary);
+  border-right: 1px solid var(--border-secondary);
+  line-height: 26px;
+}
+
+#font-size-display {
+  font-family: 'Source Code Pro', monospace;
+  font-size: 11px;
+  color: var(--text-secondary);
+  min-width: 24px;
+  text-align: center;
+  font-variant-numeric: tabular-nums;
+}
+
+
+/* ===================================================================
+   Editor
+   =================================================================== */
+
+#editor-container {
+  flex: 1;
+  min-height: 100px;
+  overflow: hidden;
+}
+
+
+/* ===================================================================
+   Resize Handle
+   =================================================================== */
+
+#resize-handle {
+  height: 4px;
+  background: var(--border-primary);
+  cursor: row-resize;
+  flex-shrink: 0;
+  transition: background 0.15s;
+}
+
+#resize-handle:hover,
+#resize-handle.dragging {
+  background: var(--accent-blue);
+}
+
+
+/* ===================================================================
+   Bottom Panel & Tabs
+   =================================================================== */
+
+#bottom-panel {
+  height: 380px;
+  min-height: 120px;
+  display: flex;
+  flex-direction: column;
+  background: var(--bg-primary);
+  border-top: 1px solid var(--border-primary);
+  flex-shrink: 0;
+}
+
+#bottom-tabs {
+  display: flex;
+  background: var(--bg-secondary);
+  border-bottom: 1px solid var(--border-primary);
+  flex-shrink: 0;
+}
+
+.tab-btn {
+  background: transparent;
+  color: var(--text-tertiary);
+  border: none;
+  padding: 8px 16px;
+  cursor: pointer;
+  font-family: 'Noto Sans KR', sans-serif;
+  font-size: 12px;
+  font-weight: 500;
+  border-bottom: 2px solid transparent;
+  transition: color 0.15s, border-color 0.15s;
+  margin-bottom: -1px;
+}
+
+.tab-btn:hover {
+  color: var(--text-primary);
+}
+
+.tab-btn.active {
+  color: var(--accent-blue);
+  border-bottom-color: var(--accent-blue);
+  font-weight: 600;
+}
+
+.tab-content {
+  display: none;
+  flex: 1;
+  overflow-y: auto;
+  padding: 10px;
+}
+
+.tab-content.active {
+  display: block;
+}
+
+
+/* ===================================================================
+   Test Case Cards
+   =================================================================== */
+
+.tc-card {
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-primary);
+  border-radius: 6px;
+  padding: 10px 12px;
+  margin-bottom: 8px;
+}
+
+.tc-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+  font-weight: 600;
+  font-size: 12px;
+  color: var(--text-heading);
+}
+
+.tc-card-header .tc-actions {
+  display: flex;
+  gap: 2px;
+}
+
+.tc-card-header .tc-actions button {
+  background: none;
+  border: none;
+  color: var(--text-tertiary);
+  cursor: pointer;
+  font-size: 12px;
+  padding: 2px 6px;
+  border-radius: 3px;
+  transition: background 0.15s, color 0.15s;
+}
+
+.tc-card-header .tc-actions button:hover {
+  background: var(--bg-hover);
+  color: var(--text-primary);
+}
+
+.tc-label {
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--text-tertiary);
+  margin-bottom: 3px;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.tc-pre {
+  background: var(--bg-tertiary);
+  color: var(--text-primary);
+  padding: 6px 8px;
+  border-radius: 4px;
+  font-family: 'Source Code Pro', Consolas, 'Courier New', monospace;
+  font-size: 12px;
+  white-space: pre-wrap;
+  word-break: break-all;
+  margin-bottom: 6px;
+  max-height: 120px;
+  overflow-y: auto;
+  border: 1px solid var(--border-primary);
+}
+
+.tc-textarea {
+  width: 100%;
+  background: var(--bg-input);
+  color: var(--text-primary);
+  border: 1px solid var(--border-secondary);
+  border-radius: 4px;
+  padding: 6px 8px;
+  font-family: 'Source Code Pro', Consolas, 'Courier New', monospace;
+  font-size: 12px;
+  resize: vertical;
+  min-height: 50px;
+  margin-bottom: 6px;
+  outline: none;
+  transition: border-color 0.15s;
+}
+
+.tc-textarea:focus {
+  border-color: var(--accent-blue);
+  box-shadow: 0 0 0 2px var(--accent-blue-subtle);
+}
+
+#btn-add-tc {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  background: none;
+  border: 1px dashed var(--border-secondary);
+  border-radius: 6px;
+  color: var(--text-tertiary);
+  padding: 8px;
+  width: 100%;
+  cursor: pointer;
+  font-family: 'Noto Sans KR', sans-serif;
+  font-size: 12px;
+  justify-content: center;
+  transition: border-color 0.15s, color 0.15s;
+}
+
+#btn-add-tc:hover {
+  border-color: var(--accent-blue);
+  color: var(--accent-blue);
+}
+
+.add-tc-form {
+  background: var(--bg-secondary);
+  border: 1px solid var(--accent-blue);
+  border-radius: 6px;
+  padding: 10px 12px;
+  margin-bottom: 8px;
+}
+
+.add-tc-form .form-actions {
+  display: flex;
+  gap: 6px;
+  justify-content: flex-end;
+}
+
+.add-tc-form .form-actions button {
+  padding: 4px 12px;
+  border-radius: 4px;
+  border: none;
+  cursor: pointer;
+  font-family: 'Noto Sans KR', sans-serif;
+  font-size: 12px;
+  font-weight: 500;
+  transition: background 0.15s;
+}
+
+.btn-save-tc {
+  background: var(--accent-blue);
+  color: #ffffff;
+}
+
+.btn-save-tc:hover {
+  background: var(--accent-blue-hover);
+}
+
+.btn-cancel-tc {
+  background: var(--bg-hover);
+  color: var(--text-primary);
+}
+
+.btn-cancel-tc:hover {
+  background: var(--border-primary);
+}
+
+
+/* ===================================================================
+   Results
+   =================================================================== */
+
+.result-summary {
+  padding: 8px 12px;
+  margin-bottom: 10px;
+  border-radius: 6px;
+  font-weight: 600;
+  font-size: 13px;
+}
+
+.result-summary.all-pass {
+  background: var(--result-pass-bg);
+  color: var(--accent-green-text);
+}
+
+.result-summary.some-fail {
+  background: var(--result-fail-bg);
+  color: var(--accent-red);
+}
+
+.result-card {
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-primary);
+  border-radius: 6px;
+  padding: 10px 12px;
+  margin-bottom: 8px;
+  border-left: 3px solid var(--border-secondary);
+}
+
+.result-card.passed {
+  border-left-color: var(--accent-green);
+}
+
+.result-card.failed {
+  border-left-color: var(--accent-red);
+}
+
+.result-card-title {
+  font-weight: 600;
+  font-size: 13px;
+  margin-bottom: 8px;
+  color: var(--text-heading);
+}
+
+.result-row {
+  display: flex;
+  margin-bottom: 3px;
+  font-size: 12px;
+  line-height: 1.6;
+}
+
+.result-label {
+  color: var(--text-tertiary);
+  min-width: 72px;
+  flex-shrink: 0;
+  font-weight: 500;
+}
+
+.result-value {
+  color: var(--text-primary);
+  font-family: 'Source Code Pro', Consolas, 'Courier New', monospace;
+  white-space: pre-wrap;
+  word-break: break-all;
+}
+
+.result-value.pass {
+  color: var(--accent-green-text);
+}
+
+.result-value.fail {
+  color: var(--accent-red);
+}
+
+.result-value.error {
+  color: var(--accent-red);
+}
+
+
+/* ===================================================================
+   Loading Spinner
+   =================================================================== */
+
+.loading-spinner {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 30px;
+  color: var(--text-tertiary);
+  gap: 8px;
+  font-size: 12px;
+}
+
+.spinner {
+  width: 16px;
+  height: 16px;
+  border: 2px solid var(--spinner-border);
+  border-top-color: var(--accent-blue);
+  border-radius: 50%;
+  animation: spin 0.6s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+
+/* ===================================================================
+   Settings Modal
+   =================================================================== */
+
+.modal {
+  position: fixed;
+  inset: 0;
+  background: var(--modal-overlay);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.modal.hidden {
+  display: none;
+}
+
+.modal-content {
+  background: var(--bg-primary);
+  border: 1px solid var(--border-secondary);
+  border-radius: 8px;
+  width: 320px;
+  max-width: 90%;
+  box-shadow: var(--shadow-md);
+}
+
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--border-primary);
+  font-weight: 600;
+  font-size: 14px;
+}
+
+.modal-body {
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.modal-body label {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--text-secondary);
+}
+
+.modal-body input,
+.modal-body select {
+  width: 100%;
+}
+
+.modal-footer {
+  padding: 12px 16px;
+  border-top: 1px solid var(--border-primary);
+  display: flex;
+  justify-content: flex-end;
+}
+
+
+/* ===================================================================
+   Scrollbar
+   =================================================================== */
+
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--scrollbar-thumb);
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--scrollbar-thumb-hover);
+}
