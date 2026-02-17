@@ -1,0 +1,24 @@
+{
+  "name": "boj-piston-proxy",
+  "version": "1.0.0",
+  "description": "Cloudflare Worker proxy for Piston API with rate limiting",
+  "main": "worker.js",
+  "type": "module",
+  "scripts": {
+    "dev": "wrangler dev",
+    "deploy": "wrangler deploy",
+    "test": "node --experimental-modules test.js"
+  },
+  "keywords": [
+    "cloudflare",
+    "worker",
+    "piston",
+    "proxy",
+    "chrome-extension"
+  ],
+  "author": "",
+  "license": "MIT",
+  "devDependencies": {
+    "wrangler": "^4.66.0"
+  }
+}
