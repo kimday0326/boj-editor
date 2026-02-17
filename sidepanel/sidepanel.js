@@ -96,14 +96,26 @@ window.BOJEditor = window.BOJEditor || {};
     },
   });
 
-  chrome.storage.onChanged.addListener((changes) => {
-    for (const key of Object.keys(changes)) {
-      if (key.startsWith('problem_') && changes[key].newValue) {
-        const newData = changes[key].newValue;
-        if (!problemData || newData.problemId !== problemData.problemId) {
-          problemData = newData;
-          onProblemChanged();
-        }
+  chrome.runtime.onMessage.addListener((message) => {
+    if (message.type === 'tab_problem_data' && message.data) {
+      const newData = message.data;
+      if (!problemData || newData.problemId !== problemData.problemId) {
+        problemData = newData;
+        onProblemChanged();
+      }
+    }
+  });
+
+  chrome.storage.onChanged.addListener(async (changes) => {
+    const tabs = await chrome.tabs.query({ active: true, currentWindow: true });
+    if (!tabs.length) return;
+
+    const activeKey = `problem_${tabs[0].id}`;
+    if (changes[activeKey]?.newValue) {
+      const newData = changes[activeKey].newValue;
+      if (!problemData || newData.problemId !== problemData.problemId) {
+        problemData = newData;
+        onProblemChanged();
       }
     }
   });

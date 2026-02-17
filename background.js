@@ -2,14 +2,21 @@ chrome.tabs.onUpdated.addListener(async (tabId, info, tab) => {
   if (!tab.url) return;
 
   const url = new URL(tab.url);
-  const isProblemPage =
-    url.hostname === 'www.acmicpc.net' && /^\/problem\/\d+/.test(url.pathname);
+  const isAcmicpc = url.hostname === 'www.acmicpc.net';
 
   await chrome.sidePanel.setOptions({
     tabId,
     path: 'sidepanel/index.html',
-    enabled: isProblemPage,
+    enabled: isAcmicpc,
   });
+});
+
+chrome.tabs.onActivated.addListener(async ({ tabId }) => {
+  const key = `problem_${tabId}`;
+  const result = await chrome.storage.local.get(key);
+  const data = result[key] ?? null;
+
+  chrome.runtime.sendMessage({ type: 'tab_problem_data', data }).catch(() => {});
 });
 
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
