@@ -79,6 +79,7 @@ window.BOJEditor.Toolbar = (function () {
     acToggle.checked = options.autocomplete !== false;
     acToggle.addEventListener('change', () => {
       window.BOJEditor.Editor.toggleAutocomplete(acToggle.checked);
+      window.BOJEditor.Storage.saveSettings({ autocomplete: acToggle.checked });
     });
 
     document.getElementById('btn-run').addEventListener('click', () => {
