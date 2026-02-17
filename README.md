@@ -1,4 +1,6 @@
-# BOJ Editor
+# BOJ Editor (백준 에디터)
+
+<img width="1280" height="800" alt="Image" src="https://i.imgur.com/whyDJZH.png" />
 
 [백준 온라인 저지(BOJ)](https://www.acmicpc.net) 문제 페이지에서 바로 코드를 작성하고 실행할 수 있는 Chrome 확장 프로그램입니다.
 
@@ -17,7 +19,7 @@
 
 > Chrome 116 이상이 필요합니다.
 
-현재 Chrome 웹스토어에 등록되어 있지 않으며, 최신 버전은 **v0.1.0**입니다.
+현재 Chrome 웹스토어에 등록되어 있지 않으므로, 아래 방법으로 수동 설치가 가능합니다.
 
 1. [릴리즈 페이지](https://github.com/kimday0326/boj-editor/releases)에서 최신 버전의 zip 파일을 다운로드합니다.
 2. 다운로드한 zip 파일의 압축을 풀어줍니다.
