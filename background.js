@@ -7,22 +7,58 @@ chrome.tabs.onUpdated.addListener(async (tabId, info, tab) => {
   await chrome.sidePanel.setOptions({
     tabId,
     path: 'sidepanel/index.html',
-    enabled: isAcmicpc,
+    enabled: true,
   });
+
+  if (isAcmicpc && info.status === 'complete') {
+    const key = `problem_${tabId}`;
+    const result = await chrome.storage.local.get(key);
+    chrome.runtime.sendMessage({
+      type: 'tab_activated',
+      isAcmicpc: true,
+      problemData: result[key] ?? null,
+    }).catch(() => {});
+  }
 });
 
 chrome.tabs.onActivated.addListener(async ({ tabId }) => {
-  const key = `problem_${tabId}`;
-  const result = await chrome.storage.local.get(key);
-  const data = result[key] ?? null;
+  try {
+    const tab = await chrome.tabs.get(tabId);
+    const isAcmicpc = tab.url ? new URL(tab.url).hostname === 'www.acmicpc.net' : false;
 
-  chrome.runtime.sendMessage({ type: 'tab_problem_data', data }).catch(() => {});
+    const key = `problem_${tabId}`;
+    const result = await chrome.storage.local.get(key);
+    const data = result[key] ?? null;
+
+    chrome.runtime.sendMessage({
+      type: 'tab_activated',
+      isAcmicpc,
+      problemData: data,
+    }).catch(() => {});
+  } catch (_) {}
 });
 
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   if (message.type === 'open_side_panel' && sender.tab?.id) {
     chrome.sidePanel.open({ tabId: sender.tab.id });
     return;
+  }
+
+  if (message.type === 'get_tab_info') {
+    (async () => {
+      try {
+        const tabs = await chrome.tabs.query({ active: true, currentWindow: true });
+        if (!tabs.length) { sendResponse({ isAcmicpc: false, problemData: null }); return; }
+        const tab = tabs[0];
+        const isAcmicpc = tab.url ? new URL(tab.url).hostname === 'www.acmicpc.net' : false;
+        const key = `problem_${tab.id}`;
+        const result = await chrome.storage.local.get(key);
+        sendResponse({ isAcmicpc, problemData: result[key] ?? null });
+      } catch (_) {
+        sendResponse({ isAcmicpc: false, problemData: null });
+      }
+    })();
+    return true;
   }
 
   if (message.type === 'set_problem_data' && sender.tab?.id) {
