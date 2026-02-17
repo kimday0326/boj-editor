@@ -71,6 +71,48 @@
 
 
 /* ===================================================================
+   Placeholder (non-BOJ tab)
+   =================================================================== */
+
+.placeholder {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100vh;
+  gap: 12px;
+  color: var(--text-tertiary);
+  user-select: none;
+}
+
+.placeholder.hidden {
+  display: none;
+}
+
+.placeholder-icon {
+  font-size: 48px;
+  line-height: 1;
+}
+
+.placeholder-title {
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--text-secondary);
+}
+
+.placeholder-desc {
+  font-size: 13px;
+  text-align: center;
+  line-height: 1.5;
+  padding: 0 24px;
+}
+
+#app.hidden {
+  display: none;
+}
+
+
+/* ===================================================================
    Base
    =================================================================== */
 

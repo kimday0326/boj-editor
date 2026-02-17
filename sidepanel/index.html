@@ -10,6 +10,13 @@
   <link rel="stylesheet" href="sidepanel.css">
 </head>
 <body>
+  <div id="placeholder" class="placeholder hidden">
+    <div class="placeholder-icon">&#128221;</div>
+    <p class="placeholder-title">BOJ Editor</p>
+    <p class="placeholder-desc">백준 문제 페이지로 이동하면 에디터가 활성화됩니다.</p>
+  </div>
+
+  <div id="app">
   <div id="toolbar">
     <div class="toolbar-left">
       <span id="problem-info"></span>
@@ -68,6 +75,7 @@
       </div>
     </div>
   </div>
+  </div><!-- #app -->
 
   <script src="../lib/monaco/vs/loader.js"></script>
   <script src="utils/languages.js"></script>
