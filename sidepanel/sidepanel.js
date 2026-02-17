@@ -15,13 +15,12 @@ window.BOJEditor = window.BOJEditor || {};
   problemData = await getProblemData();
 
   Toolbar.init({
-    defaultLanguage: currentLanguage,
-    fontSize: settings.fontSize,
-    autocomplete: settings.autocomplete,
-    apiKey: settings.apiKey,
-    runTimeout: settings.runTimeout,
-    theme: settings.theme,
-  });
+     defaultLanguage: currentLanguage,
+     fontSize: settings.fontSize,
+     autocomplete: settings.autocomplete,
+     runTimeout: settings.runTimeout,
+     theme: settings.theme,
+   });
 
   if (problemData) {
     Toolbar.setProblemInfo(problemData.problemId, problemData.problemTitle);

@@ -59,8 +59,6 @@ window.BOJEditor.Results = (function () {
         html += resultRow('\uc5d0\ub7ec \u3009', r.stderr.trimEnd(), 'error');
       }
 
-      html += resultRow('\uc2e4\ud589 \uc2dc\uac04 \u3009', r.elapsed + 'ms', '');
-
       html += '</div>';
     });
 

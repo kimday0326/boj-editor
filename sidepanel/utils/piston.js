@@ -1,10 +1,8 @@
 window.BOJEditor = window.BOJEditor || {};
 
-const PISTON_BASE_URL = 'https://emkc.org/api/v2/piston';
+const PISTON_BASE_URL = 'https://boj-piston-proxy.dhxl50.workers.dev';
 
 async function executeCode({ language, version, sourceCode, stdin, runTimeout = 5000 }) {
-  const startTime = performance.now();
-
   const response = await fetch(`${PISTON_BASE_URL}/execute`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
@@ -17,8 +15,6 @@ async function executeCode({ language, version, sourceCode, stdin, runTimeout = 
       compile_timeout: 10000,
     }),
   });
-
-  const elapsed = Math.round(performance.now() - startTime);
 
   if (!response.ok) {
     const errorText = await response.text();
@@ -37,7 +33,6 @@ async function executeCode({ language, version, sourceCode, stdin, runTimeout = 
     signal: result.run?.signal,
     compileOutput: result.compile?.output ?? null,
     compileExitCode: result.compile?.code ?? null,
-    elapsed,
   };
 }
 
@@ -56,7 +51,7 @@ async function runTestCases({ language, version, sourceCode, testCases, runTimeo
 
       const actualTrimmed = result.stdout.trimEnd();
       const expectedTrimmed = tc.expectedOutput.trimEnd();
-      const passed = actualTrimmed === expectedTrimmed;
+      const passed = result.exitCode === 0 && actualTrimmed === expectedTrimmed;
 
       results.push({
         input: tc.input,
@@ -68,7 +63,6 @@ async function runTestCases({ language, version, sourceCode, testCases, runTimeo
         signal: result.signal,
         compileOutput: result.compileOutput,
         compileExitCode: result.compileExitCode,
-        elapsed: result.elapsed,
       });
     } catch (error) {
       results.push({
@@ -81,7 +75,6 @@ async function runTestCases({ language, version, sourceCode, testCases, runTimeo
         signal: null,
         compileOutput: null,
         compileExitCode: null,
-        elapsed: 0,
         error: true,
       });
     }

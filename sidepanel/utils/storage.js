@@ -37,13 +37,12 @@ async function loadCustomTestCases(problemId) {
 }
 
 const DEFAULT_SETTINGS = {
-  apiKey: '',
-  autocomplete: true,
-  fontSize: 16,
-  defaultLanguage: 'Python 3',
-  runTimeout: 5000,
-  theme: 'light',
-};
+   autocomplete: true,
+   fontSize: 16,
+   defaultLanguage: 'Python 3',
+   runTimeout: 5000,
+   theme: 'light',
+ };
 
 async function saveSettings(settings) {
   const key = settingsKey();

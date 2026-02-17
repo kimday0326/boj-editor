@@ -97,18 +97,17 @@ window.BOJEditor.Toolbar = (function () {
       document.getElementById('settings-modal').classList.add('hidden');
     });
 
-    document.getElementById('settings-save').addEventListener('click', async () => {
-      const settings = {
-        apiKey: document.getElementById('setting-api-key').value,
-        defaultLanguage: document.getElementById('setting-default-lang').value,
-        runTimeout: parseInt(document.getElementById('setting-timeout').value, 10) || 5000,
-        fontSize: currentFontSize,
-        autocomplete: acToggle.checked,
-        theme: currentTheme,
-      };
-      await window.BOJEditor.Storage.saveSettings(settings);
-      document.getElementById('settings-modal').classList.add('hidden');
-    });
+     document.getElementById('settings-save').addEventListener('click', async () => {
+       const settings = {
+         defaultLanguage: document.getElementById('setting-default-lang').value,
+         runTimeout: parseInt(document.getElementById('setting-timeout').value, 10) || 5000,
+         fontSize: currentFontSize,
+         autocomplete: acToggle.checked,
+         theme: currentTheme,
+       };
+       await window.BOJEditor.Storage.saveSettings(settings);
+       document.getElementById('settings-modal').classList.add('hidden');
+     });
 
     const settingLangSelect = document.getElementById('setting-default-lang');
     settingLangSelect.innerHTML = '';
@@ -120,14 +119,11 @@ window.BOJEditor.Toolbar = (function () {
     });
 
     if (options.defaultLanguage) {
-      settingLangSelect.value = options.defaultLanguage;
-    }
-    if (options.apiKey) {
-      document.getElementById('setting-api-key').value = options.apiKey;
-    }
-    if (options.runTimeout) {
-      document.getElementById('setting-timeout').value = options.runTimeout;
-    }
+       settingLangSelect.value = options.defaultLanguage;
+     }
+     if (options.runTimeout) {
+       document.getElementById('setting-timeout').value = options.runTimeout;
+     }
 
     initTabs();
   }
