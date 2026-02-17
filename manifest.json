@@ -16,7 +16,7 @@
 
   "host_permissions": [
     "https://www.acmicpc.net/*",
-    "https://emkc.org/*"
+    "https://*.workers.dev/*"
   ],
 
   "background": {
