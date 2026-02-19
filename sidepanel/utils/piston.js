@@ -36,6 +36,15 @@ async function executeCode({ language, version, sourceCode, stdin, runTimeout = 
   };
 }
 
+function normalizeForJudge(output) {
+  return output
+    .replace(/\r\n/g, '\n')
+    .trim()
+    .split(/\s+/)
+    .filter(Boolean)
+    .join(' ');
+}
+
 async function runTestCases({ language, version, sourceCode, testCases, runTimeout = 5000 }) {
   const results = [];
 
@@ -49,9 +58,9 @@ async function runTestCases({ language, version, sourceCode, testCases, runTimeo
         runTimeout,
       });
 
-      const actualTrimmed = result.stdout.trimEnd();
-      const expectedTrimmed = tc.expectedOutput.trimEnd();
-      const passed = result.exitCode === 0 && actualTrimmed === expectedTrimmed;
+      const actualNormalized = normalizeForJudge(result.stdout);
+      const expectedNormalized = normalizeForJudge(tc.expectedOutput);
+      const passed = result.exitCode === 0 && actualNormalized === expectedNormalized;
 
       results.push({
         input: tc.input,
