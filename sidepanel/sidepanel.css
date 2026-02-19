@@ -401,6 +401,27 @@ input:focus {
   flex-shrink: 0;
 }
 
+#bottom-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: var(--bg-secondary);
+  border-bottom: 1px solid var(--border-primary);
+  flex-shrink: 0;
+  padding-right: 10px;
+}
+
+#bottom-header #bottom-tabs {
+  border-bottom: none;
+  background: transparent;
+}
+
+#bottom-actions {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
 .tab-btn {
   background: transparent;
   color: var(--text-tertiary);

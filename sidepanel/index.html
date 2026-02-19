@@ -36,8 +36,6 @@
           <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M6 2.5v7M2.5 6h7" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
         </button>
       </div>
-      <button id="btn-run" class="btn-run" title="Ctrl/Cmd+Enter">Run</button>
-      <button id="btn-submit" class="btn-submit">Submit</button>
       <button id="btn-theme-toggle" class="btn-icon" title="Toggle theme">&#127769;</button>
       <button id="btn-settings" class="btn-icon" title="Settings">&#9881;</button>
     </div>
@@ -48,9 +46,15 @@
   <div id="resize-handle"></div>
 
   <div id="bottom-panel">
-    <div id="bottom-tabs">
-      <button class="tab-btn active" data-tab="testcases">Test Cases</button>
-      <button class="tab-btn" data-tab="results">Results</button>
+    <div id="bottom-header">
+      <div id="bottom-tabs">
+        <button class="tab-btn active" data-tab="testcases">Test Cases</button>
+        <button class="tab-btn" data-tab="results">Results</button>
+      </div>
+      <div id="bottom-actions">
+        <button id="btn-run" class="btn-run" title="테스트 케이스를 실행합니다 (Ctrl/Cmd+Enter)">Run</button>
+        <button id="btn-submit" class="btn-submit" title="백준에 코드를 제출합니다">Submit</button>
+      </div>
     </div>
     <div id="tab-content-testcases" class="tab-content active"></div>
     <div id="tab-content-results" class="tab-content"></div>
