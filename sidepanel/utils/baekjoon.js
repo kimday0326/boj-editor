@@ -51,6 +51,7 @@ function closeTab(tabId) {
 function findBaekjoonLanguageId(languageOptions, displayName) {
   const nameMap = {
     'Python 3': 'Python 3',
+    'PyPy3': 'PyPy3',
     'C++17': 'C++17',
     'C99': 'C99',
     'Java 11': 'Java 11',

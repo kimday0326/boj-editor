@@ -7,6 +7,12 @@ const LANGUAGES = {
     extension: 'py',
     template: 'import sys\ninput = sys.stdin.readline\n\n',
   },
+  'PyPy3': {
+    piston: { language: 'python', version: '3.10.0' },
+    monaco: 'python',
+    extension: 'py',
+    template: 'import sys\ninput = sys.stdin.readline\n\n',
+  },
   'C++17': {
     piston: { language: 'c++', version: '10.2.0' },
     monaco: 'cpp',
