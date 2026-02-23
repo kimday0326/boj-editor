@@ -109,6 +109,13 @@ function classifySubmitFailure({ message, timeline }) {
     };
   }
 
+  if (hasStage(timeline, 'func:exception')) {
+    return {
+      code: 'SUBMIT_INJECTED_EXCEPTION',
+      hint: 'An exception was thrown inside the submit page context. Check timeline for details.',
+    };
+  }
+
   return {
     code: 'SUBMIT_UNKNOWN',
     hint: 'Unknown submit failure. Check [BOJ Submit Debug] timeline in service worker console.',
@@ -349,148 +356,167 @@ async function handleSubmitCode({ tabId, problemId, languageId, sourceCode, code
           timeline.push({ stage, t: Date.now(), ...details });
         }
 
-        mark('script:start', {
-          url: window.location.href,
-          visibility: document.visibilityState,
-        });
-
-        function sleep(ms) {
-          return new Promise((resolve) => setTimeout(resolve, ms));
+        function summarizeHtml(htmlText) {
+          return String(htmlText || '')
+            .replace(/\s+/g, ' ')
+            .trim()
+            .slice(0, 240);
         }
 
-        async function waitTurnstileToken() {
-          mark('turnstile:check_start');
-          const input = document.querySelector('input[name="cf-turnstile-response"]');
-          if (!input) {
-            mark('turnstile:input_missing');
-            return null;
+        try {
+
+          mark('script:start', {
+            url: window.location.href,
+            visibility: document.visibilityState,
+          });
+
+          function sleep(ms) {
+            return new Promise((resolve) => setTimeout(resolve, ms));
           }
 
-          mark('turnstile:input_found');
-          const current = input.value?.trim();
-          if (current) {
-            mark('turnstile:token_ready', { length: current.length, from: 'initial' });
-            return current;
-          }
-
-          const maxAttempts = 50;
-          for (let i = 0; i < maxAttempts; i++) {
-            await sleep(200);
-            const next = document.querySelector('input[name="cf-turnstile-response"]')?.value?.trim();
-            if (next) {
-              mark('turnstile:token_ready', { length: next.length, from: 'poll', attempt: i + 1 });
-              return next;
+          async function waitTurnstileToken(timeoutMs = 10000) {
+            mark('turnstile:check_start');
+            const input = document.querySelector('input[name="cf-turnstile-response"]');
+            if (!input) {
+              mark('turnstile:input_missing');
+              return null;
             }
+
+            mark('turnstile:input_found');
+            const current = input.value?.trim();
+            if (current) {
+              mark('turnstile:token_ready', { length: current.length, from: 'initial' });
+              return current;
+            }
+
+            const deadline = Date.now() + timeoutMs;
+            let attempt = 0;
+            while (Date.now() < deadline) {
+              await sleep(200);
+              attempt++;
+              const next = document.querySelector('input[name="cf-turnstile-response"]')?.value?.trim();
+              if (next) {
+                mark('turnstile:token_ready', { length: next.length, from: 'poll', attempt });
+                return next;
+              }
+            }
+
+            mark('turnstile:timeout');
+            throw new Error('Cloudflare verification timeout. Please refresh the submit page and retry.');
           }
 
-          mark('turnstile:timeout');
-          throw new Error('Cloudflare verification timeout. Please refresh the submit page and retry.');
-        }
+          function parseSubmissionIdFromStatus(htmlText) {
+            const doc = new DOMParser().parseFromString(htmlText, 'text/html');
+            const row = doc.querySelector('#status-table tbody tr');
+            if (!row?.id) return null;
+            const match = row.id.match(/^solution-(\d+)$/);
+            return match ? match[1] : null;
+          }
 
-        function parseSubmissionIdFromStatus(htmlText) {
-          const doc = new DOMParser().parseFromString(htmlText, 'text/html');
-          const row = doc.querySelector('#status-table tbody tr');
-          if (!row?.id) return null;
-          const match = row.id.match(/^solution-(\d+)$/);
-          return match ? match[1] : null;
-        }
+          const resolvedProblemId =
+            String(problemId || '').trim() || (window.location.pathname.match(/\/submit\/(\d+)/)?.[1] ?? '');
+          if (!resolvedProblemId) {
+            mark('submit:error_missing_problem_id');
+            return { error: 'Problem id not found on submit page.', debugTimeline: timeline };
+          }
 
-        const resolvedProblemId =
-          String(problemId || '').trim() || (window.location.pathname.match(/\/submit\/(\d+)/)?.[1] ?? '');
-        if (!resolvedProblemId) {
-          mark('submit:error_missing_problem_id');
-          return { error: 'Problem id not found on submit page.' };
-        }
+          const turnstileToken = await waitTurnstileToken();
+          mark('turnstile:done', { hasToken: Boolean(turnstileToken) });
 
-        const turnstileToken = await waitTurnstileToken();
-        mark('turnstile:done', { hasToken: Boolean(turnstileToken) });
+          const form = new URLSearchParams();
+          form.set('problem_id', resolvedProblemId);
+          form.set('language', String(languageId));
+          form.set('code_open', codeOpen || 'close');
+          form.set('source', sourceCode);
+          if (turnstileToken) {
+            form.set('cf-turnstile-response', turnstileToken);
+          }
 
-        const form = new URLSearchParams();
-        form.set('problem_id', resolvedProblemId);
-        form.set('language', String(languageId));
-        form.set('code_open', codeOpen || 'close');
-        form.set('source', sourceCode);
-        if (turnstileToken) {
-          form.set('cf-turnstile-response', turnstileToken);
-        }
+          const submitUrl = `https://www.acmicpc.net/submit/${resolvedProblemId}`;
+          const postStartedAt = Date.now();
+          mark('submit:post_start', {
+            submitUrl,
+            hasTurnstileToken: Boolean(turnstileToken),
+            hasUsername: Boolean(username),
+          });
+          const response = await fetch(submitUrl, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+            body: form.toString(),
+            credentials: 'include',
+            redirect: 'follow',
+          });
 
-        const submitUrl = `https://www.acmicpc.net/submit/${resolvedProblemId}`;
-        const postStartedAt = Date.now();
-        mark('submit:post_start', {
-          submitUrl,
-          hasTurnstileToken: Boolean(turnstileToken),
-          hasUsername: Boolean(username),
-        });
-        const response = await fetch(submitUrl, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-          body: form.toString(),
-          credentials: 'include',
-          redirect: 'follow',
-        });
+          const responseText = await response.text();
+          mark('submit:post_done', {
+            status: response.status,
+            redirected: response.redirected,
+            finalUrl: response.url,
+            postElapsedMs: Date.now() - postStartedAt,
+            responseSnippet: summarizeHtml(responseText),
+          });
+          const redirectedToStatus = response.redirected && response.url.includes('/status');
+          const finalUrlIsStatus = response.url.includes('/status');
+          const bodyLooksLikeStatus =
+            responseText.includes('status-table') || responseText.includes('채점 번호');
 
-        const responseText = await response.text();
-        mark('submit:post_done', {
-          status: response.status,
-          redirected: response.redirected,
-          finalUrl: response.url,
-          postElapsedMs: Date.now() - postStartedAt,
-          responseSnippet: summarizeHtml(responseText),
-        });
-        const redirectedToStatus = response.redirected && response.url.includes('/status');
-        const finalUrlIsStatus = response.url.includes('/status');
-        const bodyLooksLikeStatus =
-          responseText.includes('status-table') || responseText.includes('채점 번호');
+          if (!redirectedToStatus && !finalUrlIsStatus && !bodyLooksLikeStatus) {
+            mark('submit:rejected_by_heuristic');
+            return {
+              error: 'Submission was rejected by server. Please retry from the submit page.',
+              debugTimeline: timeline,
+            };
+          }
 
-        if (!redirectedToStatus && !finalUrlIsStatus && !bodyLooksLikeStatus) {
-          mark('submit:rejected_by_heuristic');
+          const statusUrl = new URL('https://www.acmicpc.net/status');
+          statusUrl.searchParams.set('from_mine', '1');
+          statusUrl.searchParams.set('problem_id', resolvedProblemId);
+          statusUrl.searchParams.set('limit', '1');
+          if (username) {
+            statusUrl.searchParams.set('user_id', username);
+          }
+
+          const statusStartedAt = Date.now();
+          mark('status:get_start', { statusUrl: statusUrl.toString() });
+          const statusResponse = await fetch(statusUrl.toString(), {
+            method: 'GET',
+            credentials: 'include',
+          });
+          const statusHtml = await statusResponse.text();
+          mark('status:get_done', {
+            status: statusResponse.status,
+            elapsedMs: Date.now() - statusStartedAt,
+            responseSnippet: summarizeHtml(statusHtml),
+          });
+
+          if (
+            statusHtml.includes('cf-turnstile') ||
+            statusHtml.includes('Just a moment') ||
+            statusHtml.includes('Cloudflare')
+          ) {
+            mark('status:cloudflare_detected');
+            return {
+              error: 'Cloudflare blocked status lookup. Open status page manually and retry later.',
+              debugTimeline: timeline,
+            };
+          }
+
+          const submissionId = parseSubmissionIdFromStatus(statusHtml);
+          mark('submit:success', { submissionId: submissionId || null });
           return {
-            error: 'Submission was rejected by server. Please retry from the submit page.',
+            ok: true,
+            submissionId,
+            statusUrl: statusUrl.toString(),
+            debugTimeline: timeline,
+          };
+
+        } catch (err) {
+          mark('func:exception', { message: err?.message ?? String(err) });
+          return {
+            error: err?.message ?? String(err),
             debugTimeline: timeline,
           };
         }
-
-        const statusUrl = new URL('https://www.acmicpc.net/status');
-        statusUrl.searchParams.set('from_mine', '1');
-        statusUrl.searchParams.set('problem_id', resolvedProblemId);
-        statusUrl.searchParams.set('limit', '1');
-        if (username) {
-          statusUrl.searchParams.set('user_id', username);
-        }
-
-        const statusStartedAt = Date.now();
-        mark('status:get_start', { statusUrl: statusUrl.toString() });
-        const statusResponse = await fetch(statusUrl.toString(), {
-          method: 'GET',
-          credentials: 'include',
-        });
-        const statusHtml = await statusResponse.text();
-        mark('status:get_done', {
-          status: statusResponse.status,
-          elapsedMs: Date.now() - statusStartedAt,
-          responseSnippet: summarizeHtml(statusHtml),
-        });
-
-        if (
-          statusHtml.includes('cf-turnstile') ||
-          statusHtml.includes('Just a moment') ||
-          statusHtml.includes('Cloudflare')
-        ) {
-          mark('status:cloudflare_detected');
-          return {
-            error: 'Cloudflare blocked status lookup. Open status page manually and retry later.',
-            debugTimeline: timeline,
-          };
-        }
-
-        const submissionId = parseSubmissionIdFromStatus(statusHtml);
-        mark('submit:success', { submissionId: submissionId || null });
-        return {
-          ok: true,
-          submissionId,
-          statusUrl: statusUrl.toString(),
-          debugTimeline: timeline,
-        };
       },
       args: [{ problemId, languageId, sourceCode, codeOpen: codeOpen || 'close', username }],
     });
