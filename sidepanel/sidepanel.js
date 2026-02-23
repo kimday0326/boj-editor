@@ -1,7 +1,7 @@
 window.BOJEditor = window.BOJEditor || {};
 
 (async function main() {
-  const { Storage, Languages, Piston, Baekjoon, Editor, Toolbar, TestCases, Results, Resizer } =
+  const { Storage, Languages, Piston, Baekjoon, Editor, Toolbar, TestCases, Results, Resizer, Stopwatch } =
     window.BOJEditor;
 
   const appEl = document.getElementById('app');
@@ -82,6 +82,10 @@ window.BOJEditor = window.BOJEditor || {};
       autocomplete: settings.autocomplete,
       runTimeout: settings.runTimeout,
       theme: settings.theme,
+    });
+
+    Stopwatch.init({
+      stopwatchEnabled: settings.stopwatchEnabled,
     });
 
     if (problemData) {

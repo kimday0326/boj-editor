@@ -75,12 +75,14 @@ window.BOJEditor.Toolbar = (function () {
 
     applyTheme(options.theme || 'dark');
 
-    const acToggle = document.getElementById('autocomplete-toggle');
-    acToggle.checked = options.autocomplete !== false;
-    acToggle.addEventListener('change', () => {
-      window.BOJEditor.Editor.toggleAutocomplete(acToggle.checked);
-      window.BOJEditor.Storage.saveSettings({ autocomplete: acToggle.checked });
-    });
+    const acToggle = document.getElementById('setting-autocomplete');
+    if (acToggle) {
+      acToggle.checked = options.autocomplete !== false;
+      acToggle.addEventListener('change', () => {
+        window.BOJEditor.Editor.toggleAutocomplete(acToggle.checked);
+        window.BOJEditor.Storage.saveSettings({ autocomplete: acToggle.checked });
+      });
+    }
 
     document.getElementById('btn-run').addEventListener('click', () => {
       if (callbacks.onRun) callbacks.onRun();
@@ -98,18 +100,22 @@ window.BOJEditor.Toolbar = (function () {
       document.getElementById('settings-modal').classList.add('hidden');
     });
 
-     document.getElementById('settings-save').addEventListener('click', async () => {
-       const settings = {
-         defaultLanguage: document.getElementById('setting-default-lang').value,
-         runTimeout: parseInt(document.getElementById('setting-timeout').value, 10) || 5000,
-         fontSize: currentFontSize,
-         autocomplete: acToggle.checked,
-         theme: currentTheme,
-       };
-       await window.BOJEditor.Storage.saveSettings(settings);
-       document.getElementById('settings-modal').classList.add('hidden');
-     });
-
+    document.getElementById('settings-save').addEventListener('click', async () => {
+      const swToggleEl = document.getElementById('setting-stopwatch');
+      const settings = {
+        defaultLanguage: document.getElementById('setting-default-lang').value,
+        runTimeout: parseInt(document.getElementById('setting-timeout').value, 10) || 5000,
+        fontSize: currentFontSize,
+        autocomplete: acToggle ? acToggle.checked : options.autocomplete !== false,
+        theme: currentTheme,
+        stopwatchEnabled: swToggleEl ? swToggleEl.checked : true,
+      };
+      await window.BOJEditor.Storage.saveSettings(settings);
+      if (window.BOJEditor.Stopwatch) {
+        window.BOJEditor.Stopwatch.setEnabled(settings.stopwatchEnabled);
+      }
+      document.getElementById('settings-modal').classList.add('hidden');
+    });
     const settingLangSelect = document.getElementById('setting-default-lang');
     settingLangSelect.innerHTML = '';
     names.forEach((name) => {
@@ -120,11 +126,16 @@ window.BOJEditor.Toolbar = (function () {
     });
 
     if (options.defaultLanguage) {
-       settingLangSelect.value = options.defaultLanguage;
-     }
-     if (options.runTimeout) {
-       document.getElementById('setting-timeout').value = options.runTimeout;
-     }
+      settingLangSelect.value = options.defaultLanguage;
+    }
+    if (options.runTimeout) {
+      document.getElementById('setting-timeout').value = options.runTimeout;
+    }
+
+    const swToggle = document.getElementById('setting-stopwatch');
+    if (swToggle) {
+      swToggle.checked = options.stopwatchEnabled !== false;
+    }
 
     initTabs();
   }

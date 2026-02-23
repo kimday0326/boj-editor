@@ -42,6 +42,7 @@ const DEFAULT_SETTINGS = {
    defaultLanguage: 'Python 3',
    runTimeout: 5000,
    theme: 'light',
+   stopwatchEnabled: true,
  };
 
 async function saveSettings(settings) {

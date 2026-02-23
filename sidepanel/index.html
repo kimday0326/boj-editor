@@ -22,11 +22,27 @@
       <span id="problem-info"></span>
       <select id="language-select"></select>
     </div>
+    <div class="toolbar-center">
+      <div id="stopwatch-wrapper" class="stopwatch-wrapper">
+        <span id="stopwatch-display" class="stopwatch-display">00:00</span>
+        <button id="btn-stopwatch-toggle" class="btn-stopwatch" title="일시정지">
+          <svg id="stopwatch-icon-pause" width="10" height="10" viewBox="0 0 10 10" fill="none">
+            <rect x="2" y="1" width="2.5" height="8" rx="1" fill="currentColor"/>
+            <rect x="5.5" y="1" width="2.5" height="8" rx="1" fill="currentColor"/>
+          </svg>
+          <svg id="stopwatch-icon-play" width="10" height="10" viewBox="0 0 10 10" fill="none" style="display:none">
+            <path d="M2 1.5l7 3.5-7 3.5V1.5z" fill="currentColor"/>
+          </svg>
+        </button>
+        <button id="btn-stopwatch-reset" class="btn-stopwatch btn-stopwatch-reset" title="리셋">
+          <svg width="10" height="10" viewBox="0 0 10 10" fill="none">
+            <path d="M5 1.5A3.5 3.5 0 1 1 1.5 5" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/>
+            <path d="M1.5 2.5V5H4" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </button>
+      </div>
+    </div>
     <div class="toolbar-right">
-      <label class="toggle-label">
-        <input type="checkbox" id="autocomplete-toggle" checked>
-        <span>Auto</span>
-      </label>
       <div class="font-size-stepper">
         <button id="font-decrease" class="stepper-btn" title="Decrease font size" aria-label="Decrease font size">
           <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M2.5 6h7" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
@@ -67,12 +83,22 @@
         <button id="settings-close" class="btn-icon">&times;</button>
       </div>
       <div class="modal-body">
-        <label>Default Language
-          <select id="setting-default-lang"></select>
-        </label>
-        <label>Run Timeout (ms)
-          <input type="number" id="setting-timeout" value="5000" min="1000" max="30000" step="1000">
-        </label>
+        <div class="setting-row">
+          <label class="setting-key" for="setting-default-lang">Default Language</label>
+          <select id="setting-default-lang" class="setting-control"></select>
+        </div>
+        <div class="setting-row">
+          <label class="setting-key" for="setting-timeout">Run Timeout (ms)</label>
+          <input type="number" id="setting-timeout" class="setting-control" value="5000" min="1000" max="30000" step="1000">
+        </div>
+        <div class="setting-row">
+          <span class="setting-key">Autocomplete</span>
+          <input type="checkbox" id="setting-autocomplete" class="setting-checkbox" checked>
+        </div>
+        <div class="setting-row">
+          <span class="setting-key">Stopwatch</span>
+          <input type="checkbox" id="setting-stopwatch" class="setting-checkbox" checked>
+        </div>
       </div>
       <div class="modal-footer">
         <button id="settings-save" class="btn-run">Save</button>
@@ -91,6 +117,7 @@
   <script src="components/testcases.js"></script>
   <script src="components/results.js"></script>
   <script src="components/resizer.js"></script>
+  <script src="components/stopwatch.js"></script>
   <script src="sidepanel.js"></script>
 </body>
 </html>
