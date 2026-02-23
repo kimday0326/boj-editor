@@ -21,6 +21,104 @@ chrome.tabs.onUpdated.addListener(async (tabId, info, tab) => {
   }
 });
 
+const SUBMIT_DEBUG_PREFIX = '[BOJ Submit Debug]';
+
+function logSubmitDebug(label, details) {
+  if (details === undefined) {
+    console.log(`${SUBMIT_DEBUG_PREFIX} ${label}`);
+    return;
+  }
+  console.log(`${SUBMIT_DEBUG_PREFIX} ${label}`, details);
+}
+
+function summarizeHtml(htmlText) {
+  return String(htmlText || '')
+    .replace(/\s+/g, ' ')
+    .trim()
+    .slice(0, 240);
+}
+
+function summarizeTimeline(timeline) {
+  if (!Array.isArray(timeline) || timeline.length === 0) {
+    return [];
+  }
+
+  const base = timeline[0].t;
+  return timeline.map((entry) => ({
+    stage: entry.stage,
+    elapsedMs: Math.max(0, entry.t - base),
+    ...Object.fromEntries(
+      Object.entries(entry).filter(([key]) => key !== 'stage' && key !== 't')
+    ),
+  }));
+}
+
+function hasStage(timeline, stage) {
+  return Array.isArray(timeline) && timeline.some((entry) => entry.stage === stage);
+}
+
+function classifySubmitFailure({ message, timeline }) {
+  const text = String(message || '');
+
+  if (text.includes('Login session not detected')) {
+    return {
+      code: 'LOGIN_SESSION_MISSING',
+      hint: 'Baekjoon login session is missing. Re-login and retry.',
+    };
+  }
+
+  if (text.includes('Submit page load timed out')) {
+    return {
+      code: 'SUBMIT_PAGE_TIMEOUT',
+      hint: 'Submit tab did not finish loading in time. Check network and retry.',
+    };
+  }
+
+  if (hasStage(timeline, 'turnstile:timeout') || text.includes('Cloudflare verification timeout')) {
+    return {
+      code: 'TURNSTILE_TOKEN_TIMEOUT',
+      hint: 'Cloudflare token was not ready. Open submit tab, solve challenge, retry.',
+    };
+  }
+
+  if (hasStage(timeline, 'status:cloudflare_detected') || text.includes('Cloudflare blocked status lookup')) {
+    return {
+      code: 'STATUS_CLOUDFLARE_BLOCKED',
+      hint: 'Cloudflare blocked status check. Open status page manually and retry later.',
+    };
+  }
+
+  if (hasStage(timeline, 'submit:error_missing_problem_id') || text.includes('Problem id not found')) {
+    return {
+      code: 'PROBLEM_ID_MISSING',
+      hint: 'Problem ID was not found in submit page context.',
+    };
+  }
+
+  if (hasStage(timeline, 'turnstile:input_missing') && hasStage(timeline, 'submit:rejected_by_heuristic')) {
+    return {
+      code: 'TURNSTILE_INPUT_MISSING_REJECTED',
+      hint: 'Turnstile input not found, then submit was rejected. Check hidden-tab challenge behavior.',
+    };
+  }
+
+  if (hasStage(timeline, 'submit:rejected_by_heuristic') || text.includes('Submission was rejected by server')) {
+    return {
+      code: 'SUBMIT_RESPONSE_REJECTED',
+      hint: 'Server response did not match success heuristics. Check POST response and redirects.',
+    };
+  }
+
+  return {
+    code: 'SUBMIT_UNKNOWN',
+    hint: 'Unknown submit failure. Check [BOJ Submit Debug] timeline in service worker console.',
+  };
+}
+
+function formatClassifiedError({ code, message, hint }) {
+  return `[${code}] ${message}${hint ? ` (${hint})` : ''}`;
+}
+
 chrome.tabs.onActivated.addListener(async ({ tabId }) => {
   try {
     const tab = await chrome.tabs.get(tabId);
@@ -101,9 +199,13 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
 function openTabAndWaitForLoad(url) {
   return new Promise((resolve, reject) => {
     const TIMEOUT_MS = 15000;
+    const startedAt = Date.now();
+
+    logSubmitDebug('openTab:start', { url, timeoutMs: TIMEOUT_MS });
 
     chrome.tabs.create({ url, active: false }, (tab) => {
       if (chrome.runtime.lastError) {
+        logSubmitDebug('openTab:create_error', { message: chrome.runtime.lastError.message });
         reject(new Error(chrome.runtime.lastError.message));
         return;
       }
@@ -116,6 +218,7 @@ function openTabAndWaitForLoad(url) {
         settled = true;
         chrome.tabs.onUpdated.removeListener(listener);
         chrome.tabs.remove(tabId).catch(() => {});
+        logSubmitDebug('openTab:timeout', { tabId, elapsedMs: Date.now() - startedAt });
         reject(new Error('Submit page load timed out.'));
       }, TIMEOUT_MS);
 
@@ -128,10 +231,20 @@ function openTabAndWaitForLoad(url) {
 
         if (updatedTab.url?.includes('/login')) {
           chrome.tabs.remove(tabId).catch(() => {});
+          logSubmitDebug('openTab:login_redirect', {
+            tabId,
+            elapsedMs: Date.now() - startedAt,
+            finalUrl: updatedTab.url,
+          });
           reject(new Error('Login session not detected. Please log in to Baekjoon again and retry.'));
           return;
         }
 
+        logSubmitDebug('openTab:loaded', {
+          tabId,
+          elapsedMs: Date.now() - startedAt,
+          finalUrl: updatedTab.url || null,
+        });
         resolve(tabId);
       }
 
@@ -161,6 +274,9 @@ function sendMessageToTab(tabId, message) {
 
 async function handleFetchSubmitPage(problemId) {
   try {
+    const startedAt = Date.now();
+    logSubmitDebug('fetchSubmitPage:start', { problemId });
+
     const tabId = await openTabAndWaitForLoad(`https://www.acmicpc.net/submit/${problemId}`);
     await injectContentScript(tabId);
 
@@ -168,41 +284,106 @@ async function handleFetchSubmitPage(problemId) {
 
     if (result?.error) {
       chrome.tabs.remove(tabId).catch(() => {});
-      return { error: result.error };
+      const classification = classifySubmitFailure({ message: result.error, timeline: [] });
+      const classifiedMessage = formatClassifiedError({
+        code: classification.code,
+        message: result.error,
+        hint: classification.hint,
+      });
+      logSubmitDebug('fetchSubmitPage:error', {
+        problemId,
+        tabId,
+        elapsedMs: Date.now() - startedAt,
+        message: result.error,
+        errorCode: classification.code,
+      });
+      return { error: classifiedMessage, errorCode: classification.code };
     }
+
+    logSubmitDebug('fetchSubmitPage:success', {
+      problemId,
+      tabId,
+      elapsedMs: Date.now() - startedAt,
+      languageCount: Array.isArray(result.languageOptions) ? result.languageOptions.length : 0,
+    });
 
     return {
       languageOptions: result.languageOptions,
       _tabId: tabId,
     };
   } catch (err) {
-    return { error: err.message };
+    const classification = classifySubmitFailure({ message: err.message, timeline: [] });
+    const classifiedMessage = formatClassifiedError({
+      code: classification.code,
+      message: err.message,
+      hint: classification.hint,
+    });
+    logSubmitDebug('fetchSubmitPage:exception', {
+      problemId,
+      message: err.message,
+      errorCode: classification.code,
+    });
+    return { error: classifiedMessage, errorCode: classification.code };
   }
 }
 
 async function handleSubmitCode({ tabId, problemId, languageId, sourceCode, codeOpen, username }) {
   try {
+    const startedAt = Date.now();
+    const submitId = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+    logSubmitDebug('submit:start', {
+      submitId,
+      tabId,
+      problemId,
+      languageId,
+      sourceLength: String(sourceCode || '').length,
+    });
+
     const [{ result }] = await chrome.scripting.executeScript({
       target: { tabId },
       world: 'MAIN',
       func: async ({ problemId, languageId, sourceCode, codeOpen, username }) => {
+        const timeline = [];
+
+        function mark(stage, details = {}) {
+          timeline.push({ stage, t: Date.now(), ...details });
+        }
+
+        mark('script:start', {
+          url: window.location.href,
+          visibility: document.visibilityState,
+        });
+
         function sleep(ms) {
           return new Promise((resolve) => setTimeout(resolve, ms));
         }
 
         async function waitTurnstileToken() {
+          mark('turnstile:check_start');
           const input = document.querySelector('input[name="cf-turnstile-response"]');
-          if (!input) return null;
+          if (!input) {
+            mark('turnstile:input_missing');
+            return null;
+          }
+
+          mark('turnstile:input_found');
           const current = input.value?.trim();
-          if (current) return current;
+          if (current) {
+            mark('turnstile:token_ready', { length: current.length, from: 'initial' });
+            return current;
+          }
 
           const maxAttempts = 50;
           for (let i = 0; i < maxAttempts; i++) {
             await sleep(200);
             const next = document.querySelector('input[name="cf-turnstile-response"]')?.value?.trim();
-            if (next) return next;
+            if (next) {
+              mark('turnstile:token_ready', { length: next.length, from: 'poll', attempt: i + 1 });
+              return next;
+            }
           }
 
+          mark('turnstile:timeout');
           throw new Error('Cloudflare verification timeout. Please refresh the submit page and retry.');
         }
 
@@ -217,10 +398,12 @@ async function handleSubmitCode({ tabId, problemId, languageId, sourceCode, code
         const resolvedProblemId =
           String(problemId || '').trim() || (window.location.pathname.match(/\/submit\/(\d+)/)?.[1] ?? '');
         if (!resolvedProblemId) {
+          mark('submit:error_missing_problem_id');
           return { error: 'Problem id not found on submit page.' };
         }
 
         const turnstileToken = await waitTurnstileToken();
+        mark('turnstile:done', { hasToken: Boolean(turnstileToken) });
 
         const form = new URLSearchParams();
         form.set('problem_id', resolvedProblemId);
@@ -232,6 +415,12 @@ async function handleSubmitCode({ tabId, problemId, languageId, sourceCode, code
         }
 
         const submitUrl = `https://www.acmicpc.net/submit/${resolvedProblemId}`;
+        const postStartedAt = Date.now();
+        mark('submit:post_start', {
+          submitUrl,
+          hasTurnstileToken: Boolean(turnstileToken),
+          hasUsername: Boolean(username),
+        });
         const response = await fetch(submitUrl, {
           method: 'POST',
           headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
@@ -241,13 +430,24 @@ async function handleSubmitCode({ tabId, problemId, languageId, sourceCode, code
         });
 
         const responseText = await response.text();
+        mark('submit:post_done', {
+          status: response.status,
+          redirected: response.redirected,
+          finalUrl: response.url,
+          postElapsedMs: Date.now() - postStartedAt,
+          responseSnippet: summarizeHtml(responseText),
+        });
         const redirectedToStatus = response.redirected && response.url.includes('/status');
         const finalUrlIsStatus = response.url.includes('/status');
         const bodyLooksLikeStatus =
           responseText.includes('status-table') || responseText.includes('채점 번호');
 
         if (!redirectedToStatus && !finalUrlIsStatus && !bodyLooksLikeStatus) {
-          return { error: 'Submission was rejected by server. Please retry from the submit page.' };
+          mark('submit:rejected_by_heuristic');
+          return {
+            error: 'Submission was rejected by server. Please retry from the submit page.',
+            debugTimeline: timeline,
+          };
         }
 
         const statusUrl = new URL('https://www.acmicpc.net/status');
@@ -258,40 +458,76 @@ async function handleSubmitCode({ tabId, problemId, languageId, sourceCode, code
           statusUrl.searchParams.set('user_id', username);
         }
 
+        const statusStartedAt = Date.now();
+        mark('status:get_start', { statusUrl: statusUrl.toString() });
         const statusResponse = await fetch(statusUrl.toString(), {
           method: 'GET',
           credentials: 'include',
         });
         const statusHtml = await statusResponse.text();
+        mark('status:get_done', {
+          status: statusResponse.status,
+          elapsedMs: Date.now() - statusStartedAt,
+          responseSnippet: summarizeHtml(statusHtml),
+        });
 
         if (
           statusHtml.includes('cf-turnstile') ||
           statusHtml.includes('Just a moment') ||
           statusHtml.includes('Cloudflare')
         ) {
+          mark('status:cloudflare_detected');
           return {
             error: 'Cloudflare blocked status lookup. Open status page manually and retry later.',
+            debugTimeline: timeline,
           };
         }
 
         const submissionId = parseSubmissionIdFromStatus(statusHtml);
+        mark('submit:success', { submissionId: submissionId || null });
         return {
           ok: true,
           submissionId,
           statusUrl: statusUrl.toString(),
+          debugTimeline: timeline,
         };
       },
       args: [{ problemId, languageId, sourceCode, codeOpen: codeOpen || 'close', username }],
     });
 
     if (!result || result.error) {
+      const baseMessage = result?.error || 'Submission failed in submit page context.';
+      const timeline = summarizeTimeline(result?.debugTimeline);
+      const classification = classifySubmitFailure({ message: baseMessage, timeline });
+      const classifiedMessage = formatClassifiedError({
+        code: classification.code,
+        message: baseMessage,
+        hint: classification.hint,
+      });
+      logSubmitDebug('submit:error', {
+        submitId,
+        tabId,
+        elapsedMs: Date.now() - startedAt,
+        message: baseMessage,
+        errorCode: classification.code,
+        timeline,
+      });
       chrome.tabs.remove(tabId).catch(() => {});
-      return { error: result?.error || 'Submission failed in submit page context.' };
+      return { error: classifiedMessage, errorCode: classification.code };
     }
 
     if (result.statusUrl) {
       await chrome.tabs.update(tabId, { url: result.statusUrl, active: false });
     }
+
+    logSubmitDebug('submit:success', {
+      submitId,
+      tabId,
+      elapsedMs: Date.now() - startedAt,
+      submissionId: result.submissionId || null,
+      statusUrl: result.statusUrl || null,
+      timeline: summarizeTimeline(result.debugTimeline),
+    });
 
     return {
       ok: true,
@@ -300,8 +536,21 @@ async function handleSubmitCode({ tabId, problemId, languageId, sourceCode, code
       submissionId: result.submissionId || null,
     };
   } catch (err) {
+    const classification = classifySubmitFailure({ message: err.message, timeline: [] });
+    const classifiedMessage = formatClassifiedError({
+      code: classification.code,
+      message: err.message,
+      hint: classification.hint,
+    });
+    logSubmitDebug('submit:exception', {
+      tabId,
+      problemId,
+      languageId,
+      message: err.message,
+      errorCode: classification.code,
+    });
     chrome.tabs.remove(tabId).catch(() => {});
-    return { error: err.message };
+    return { error: classifiedMessage, errorCode: classification.code };
   }
 }
 
